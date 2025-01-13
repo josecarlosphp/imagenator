@@ -1,0 +1,8 @@
+/config/*
+!/config/.htaccess
+!/config/config-sample.php
+/nbproject/
+/rsc/*
+!/rsc/.htaccess
+!/rsc/pixel.gif
+/test.php
