@@ -4,6 +4,7 @@ namespace josecarlosphp;
 
 /**
  * @author josecarlosphp.com
+ * @version 0.0.2
  */
 class Imagenator extends \josecarlosphp\Lister
 {
@@ -57,6 +58,28 @@ class Imagenator extends \josecarlosphp\Lister
         return $this->p(__FUNCTION__, $excluded);
     }
 
+    public function changeSrc($src)
+    {
+        if ($this->checkSrc($src)) {
+            $arr = explode('/', $src);
+            $val = mb_strtolower(implode('/', array_slice($arr, 0, 3)));
+            if (strcasecmp(mb_substr($val, 0, 7), 'http://') === 0) {
+                $val = 'https://' . mb_substr($val, 7);
+            }
+            $this->msgDbg('$val = ' . $val);
+            if (($key = $this->add($val)) !== false) {
+                $this->msgDbg('$key = ' . $key);
+                return sprintf('%s%03s/%s', $this->baseUrl, $key, implode('/', array_slice($arr, 3)));
+            } else {
+                $this->msgDbg('$key = false', 'error');
+            }
+        } else {
+            $this->msgDbg('src value is NOT valid: ' . $src);
+        }
+
+        return false;
+    }
+
     public function process($str, $props = array())
     {
         $this->msgDbg('Process start');
@@ -74,22 +97,8 @@ class Imagenator extends \josecarlosphp\Lister
                 if ($document->loadHTML($imgHtml)) {
                     $imgs = $document->getElementsByTagName('img');
                     foreach ($imgs as $img) {
-                        $src = trim($img->getAttribute('src'));
-                        if ($this->checkSrc($src)) {
-                            $arr = explode('/', $src);
-                            $val = mb_strtolower(implode('/', array_slice($arr, 0, 3)));
-                            if (strcasecmp(mb_substr($val, 0, 7), 'http://') === 0) {
-                                $val = 'https://' . mb_substr($val, 7);
-                            }
-                            $this->msgDbg('$val = ' . $val);
-                            if (($key = $this->add($val)) !== false) {
-                                $this->msgDbg('$key = ' . $key);
-                                $img->setAttribute('src', sprintf('%s%03s/%s', $this->baseUrl, $key, implode('/', array_slice($arr, 3))));
-                            } else {
-                                $this->msgDbg('$key = false', 'error');
-                            }
-                        } else {
-                            $this->msgDbg('src value is NOT valid: ' . $src);
+                        if (($src = $this->changeSrc(trim($img->getAttribute('src'))))) {
+                            $img->setAttribute('src', $src);
                         }
 
                         foreach ($props as $prop => $item) {
